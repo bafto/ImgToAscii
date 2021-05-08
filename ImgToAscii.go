@@ -7,6 +7,9 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"strconv"
+
+	"github.com/nfnt/resize"
 )
 
 func mapRange(x, in_min, in_max, out_min, out_max int) int {
@@ -23,26 +26,41 @@ func getImage(path string) (image.Image, error) {
 	return img, err
 }
 
-/*func scaleImage(maxWidth, maxHeight int, img *image.Image) error {
-	var image image.Image
-	image.Bounds().
-}*/
-
 func main() {
-	var grayscale [8]string = [8]string{"@", "%", "#", "*", "+", "=", ":", "."}
-
-	var imagePath, outputPath string
+	var (
+		grayscale             [8]string = [8]string{"@", "%", "#", "*", "+", "=", ":", "."}
+		imagePath, outputPath string
+		threshhold            *uint
+		Width, Height         int
+	)
 
 	switch len(os.Args) {
-	case 1:
-		imagePath = "image.png"
-		outputPath = "image.txt"
-	case 2:
+	case 4:
+		i, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		Width = i
+		Height, err = strconv.Atoi(os.Args[3])
+		if err != nil {
+			log.Fatal(err)
+		}
 		imagePath = os.Args[1]
 		outputPath = imagePath[0:len(imagePath)-len("png")] + "txt"
 	case 3:
+		i, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		threshhold = new(uint)
+		*threshhold = uint(i)
+		fallthrough
+	case 2:
 		imagePath = os.Args[1]
-		outputPath = os.Args[2]
+		outputPath = imagePath[0:len(imagePath)-len("png")] + "txt"
+	case 1:
+		imagePath = "image.png"
+		outputPath = "image.txt"
 	default:
 		log.Fatal("Bad path arguments")
 	}
@@ -55,6 +73,17 @@ func main() {
 	outputFile, err := os.OpenFile(outputPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if threshhold != nil {
+		var width, height = uint(img.Bounds().Max.X), uint(img.Bounds().Max.Y)
+		if width > *threshhold {
+			img = resize.Resize(uint(*threshhold), 0, img, resize.Lanczos3)
+		} else if height > *threshhold {
+			img = resize.Resize(0, uint(*threshhold), img, resize.Lanczos3)
+		}
+	} else {
+		img = resize.Resize(uint(Width), uint(Height), img, resize.Lanczos3)
 	}
 
 	for y := 0; y < img.Bounds().Max.Y; y++ {

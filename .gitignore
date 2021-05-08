@@ -3,3 +3,5 @@
 !ImgToAscii.go
 !ImgToAscii.exe
 !.gitignore
+!go.mod
+!go.sum
