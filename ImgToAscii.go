@@ -34,9 +34,12 @@ func main() {
 	var imagePath, outputPath string
 
 	switch len(os.Args) {
+	case 1:
+		imagePath = "image.png"
+		outputPath = "image.txt"
 	case 2:
 		imagePath = os.Args[1]
-		outputPath = "image.txt"
+		outputPath = imagePath[0:len(imagePath)-len("png")] + "txt"
 	case 3:
 		imagePath = os.Args[1]
 		outputPath = os.Args[2]
